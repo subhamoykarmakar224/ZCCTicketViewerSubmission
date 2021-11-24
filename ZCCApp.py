@@ -1,6 +1,8 @@
 import math
 from urllib.parse import urlencode
-import json, os
+import json
+import os
+from datetime import datetime
 import requests
 from bottle import route, template, redirect, static_file, error, request, response, run
 
@@ -16,7 +18,7 @@ def base():
 @route('/<pg:re:p*[0-9]*>')
 def show_home(pg='#'):
     request_pg_num = 0
-    if pg!="#":
+    if pg != "#":
         request_pg_num = int(pg[1:])
     params = {
         'name': '',
@@ -226,4 +228,8 @@ def error404(error):
     return template('error', error_msg='500 error. Internal Server Error. Please try again later.')
 
 
-run(host='localhost', port=3001, debug=True)
+if __name__ == '__main__':
+    uri_resource_file = './tmp/resource.txt'
+    if os.path.exists(uri_resource_file):
+        os.remove(uri_resource_file)
+    run(host='localhost', port=3001, debug=True)
