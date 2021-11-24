@@ -1,7 +1,12 @@
+# My files
+user_data.txt
+resource.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
 
 # C extensions
 *.so
