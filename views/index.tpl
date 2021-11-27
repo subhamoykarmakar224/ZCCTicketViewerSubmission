@@ -13,8 +13,8 @@
       <h3>Ticket Lists (Total: {{ ticket_count }})</h3>
       <p>{{cur_page}} of {{page_count}} Pages</p>
       <p>
-          <a href="/p{{cur_page - 1}}">Prev</a>&nbsp;&nbsp;&nbsp;&nbsp;
-          <a href="/p{{cur_page + 1}}">Next</a>
+          <a href="/{{cur_page - 1}}">Prev</a>&nbsp;&nbsp;&nbsp;&nbsp;
+          <a href="/{{cur_page + 1}}">Next</a>
       </p>
       <table class="table table-striped">
           <thead>

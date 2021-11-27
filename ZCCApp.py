@@ -1,25 +1,32 @@
 import math
 from urllib.parse import urlencode
 import json
-import os
-from datetime import datetime
 import requests
-from bottle import route, template, redirect, static_file, error, request, response, run
+from bottle import route, template, redirect, error, request, response, run
+from Helper import *
+from dotenv import load_dotenv
+import os
+from os.path import join, dirname
+
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 
 @route('/')
 def base():
-    uri_resource_file = './tmp/resource.txt'
-    if os.path.exists(uri_resource_file):
-        os.remove(uri_resource_file)
-    redirect('/p1')
+    if if_path_exists(URI_RESOURCE_FILE):
+        os.remove(URI_RESOURCE_FILE)
+    write_domain_to_file()
+    redirect('/1')
 
 
-@route('/<pg:re:p*[0-9]*>')
+@route('/<pg>')
 def show_home(pg='#'):
+    write_domain_to_file()
     request_pg_num = 0
     if pg != "#":
-        request_pg_num = int(pg[1:])
+        request_pg_num = int(pg)
     params = {
         'name': '',
         'role': '',
@@ -30,24 +37,30 @@ def show_home(pg='#'):
         'btn-previous-disable': '',
         'btn-next-disable': '',
     }
-    if request.get_cookie('owat'):
-        no_of_items = 25
+
+    if request.get_cookie(KEY_COOKIE_NAME):
         params['ticket_count'] = get_tickets_count()
-        params['page_count'] = math.ceil(params['ticket_count'] / no_of_items)
+        params['page_count'] = math.ceil(params['ticket_count'] / APP_PER_PAGE_ITEM_COUNT)
         user_data = get_user_data()
         if user_data == []:
             get_user_information()
             user_data = get_user_data()
         params['name'] = user_data[0]
         params['role'] = user_data[1]
+        params['domain'] = user_data[2]
+
         # Get user data
-        access_token = request.get_cookie('owat')
+        access_token = request.get_cookie(KEY_COOKIE_NAME)
         bearer_token = 'Bearer ' + access_token
         header = {'Authorization': bearer_token}
         url = ""
         prev_pg_url, next_pg_url, cur_page = get_url_data_from_file()
+        if abs(cur_page - request_pg_num) > 1:
+            write_url_data_to_file(prev_pg_url, next_pg_url, cur_page)
+            return template('error', error_msg='404 error. Page you are looking for does not exits.')
+
         if next_pg_url == '' or prev_pg_url == '' or request_pg_num <= 0:
-            url = 'https://zccsubhamoy.zendesk.com/api/v2/tickets.json?page[size]=25'
+            url = 'https://' + read_user_domain_name() + '.zendesk.com/api/v2/tickets.json?page[size]=' + str(APP_PER_PAGE_ITEM_COUNT)
             params['cur_page'] = 1
             params['btn-previous-disable'] = 'disabled'
         elif request_pg_num > cur_page:
@@ -65,7 +78,7 @@ def show_home(pg='#'):
         r = requests.get(url, headers=header)
         if r.status_code != 200:
             error_msg = 'Failed to get data with error {}'.format(r.status_code)
-            return template('index', error_msg=error_msg)
+            return template('error', error_msg=error_msg)
         else:
             raw_data = r.json()
             if params['cur_page'] >= params['page_count']:
@@ -91,41 +104,41 @@ def handle_decision():
         parameters = {
             'grant_type': 'authorization_code',
             'code': request.query.code,
-            'client_id': 'zcc_oauth_app',
-            'client_secret': '52391629c5df64127d24af9e1d2b18c4b70c257e5fccc0010bf336491861b03d',
+            'client_id': get_env_value(ENV_KEY_CLIENT_ID),
+            'client_secret': get_env_value(ENV_KEY_CLIENT_SECRET),
             'redirect_uri': 'http://localhost:3001/handle_user_decision',
             'scope': 'read'
         }
         payload = json.dumps(parameters)
         header = {'Content-Type': 'application/json'}
-        url = 'https://zccsubhamoy.zendesk.com/oauth/tokens'
+        url = 'https://' + read_user_domain_name() + '.zendesk.com/oauth/tokens'
         r = requests.post(url, data=payload, headers=header)
         if r.status_code != 200:
             error_msg = 'Failed to get access token with error {}'.format(r.status_code)
             return template('error', error_msg=error_msg)
         else:
             data = r.json()
-            response.set_cookie('owat', data['access_token'])
+            response.set_cookie(KEY_COOKIE_NAME, data['access_token'])
             redirect('/')
 
 
 def get_tickets_count():
-    access_token = request.get_cookie('owat')
+    access_token = request.get_cookie(KEY_COOKIE_NAME)
     bearer_token = 'Bearer ' + access_token
     header = {'Authorization': bearer_token}
-    url = 'https://zccsubhamoy.zendesk.com/api/v2/tickets/count.json'
+    url = 'https://' + read_user_domain_name() + '.zendesk.com/api/v2/tickets/count.json'
     r = requests.get(url, headers=header)
     data = r.json()
     return data['count']['value']
 
 
 def get_user_information():
-    if request.get_cookie('owat'):
+    if request.get_cookie(KEY_COOKIE_NAME):
         # Get user data
-        access_token = request.get_cookie('owat')
+        access_token = request.get_cookie(KEY_COOKIE_NAME)
         bearer_token = 'Bearer ' + access_token
         header = {'Authorization': bearer_token}
-        url = 'https://zccsubhamoy.zendesk.com/api/v2/users/me.json'
+        url = 'https://' + read_user_domain_name() + '.zendesk.com/api/v2/users/me.json'
         r = requests.get(url, headers=header)
         if r.status_code != 200:
             error_msg = 'Failed to get data with error {}'.format(r.status_code)
@@ -137,85 +150,21 @@ def get_user_information():
         redirect_to_authentication()
 
 
-def write_url_data_to_file(prev, next, cur_page):
-    uri_resource_file = './tmp/resource.txt'
-    f = open(uri_resource_file, 'w')
-    f.write("prev:" + str(prev) + "\n")
-    f.write("next:" + str(next) + "\n")
-    f.write("page:" + str(cur_page) + "\n")
-    f.close()
-
-
-def get_url_data_from_file():
-    uri_resource_file = './tmp/resource.txt'
-    ln = []
-
-    if not os.path.exists(uri_resource_file):
-        return '', '', 0
-
-    with open(uri_resource_file, 'r') as l:
-        ln = l.readlines()
-    if len(ln) == 0:
-        return '', '', 0
-    prev_url = ln[0][ln[0].index(':') + 1:]
-    next_url = ln[1][ln[1].index(':') + 1:]
-    cur_page_no = ln[2][ln[2].index(':') + 1:]
-
-    if os.path.exists(uri_resource_file):
-        os.remove(uri_resource_file)
-
-    return prev_url.strip('\n'), next_url.strip('\n'), int(cur_page_no.strip('\n'))
-
-
-def get_user_data():
-    data_file = './tmp/user_data.txt'
-    if not os.path.exists(data_file):
-        return []
-    lines = []
-    with open(data_file, 'r') as l:
-        lines = l.readlines()
-    return [lines[0], lines[1]]
-
-
-def write_user_data(name, role):
-    data_file = './tmp/user_data.txt'
-    f = open(data_file, 'w')
-    f.write(name + '\n')
-    f.write(role + '\n')
-    f.close()
-
-
-def clear_user_data():
-    data_file = './tmp/user_data.txt'
-    if os.path.exists(data_file):
-        os.remove(data_file)
-
-
-def data_cleaning_ticket(raw_data):
-    data = []
-    for t in raw_data['tickets']:
-        data.append(
-            {
-                "id": t["id"],
-                "created_at": t["created_at"],
-                "status": t["status"],
-                "priority": t["priority"],
-                "subject": t["subject"]
-            }
-        )
-
-    return data
-
-
 def redirect_to_authentication():
     clear_user_data()
     parameters = {
         'response_type': 'code',
         'redirect_uri': 'http://localhost:3001/handle_user_decision',
-        'client_id': 'zcc_oauth_app',
-        'scope': 'read write'}
-    url = 'https://zccsubhamoy.zendesk.com/oauth/authorizations/new?' + urlencode(parameters)
+        'client_id': get_env_value(ENV_KEY_CLIENT_ID),
+        'scope': 'read write'
+    }
+    url = 'https://' + read_user_domain_name() + '.zendesk.com/oauth/authorizations/new?' + urlencode(parameters)
     redirect(url)
+
+
+def get_env_value(key):
+    return os.environ.get(key, '')
+
 
 
 @error(404)
@@ -229,7 +178,7 @@ def error404(error):
 
 
 if __name__ == '__main__':
-    uri_resource_file = './tmp/resource.txt'
-    if os.path.exists(uri_resource_file):
-        os.remove(uri_resource_file)
-    run(host='localhost', port=3001, debug=True)
+    if os.path.exists(URI_RESOURCE_FILE):
+        os.remove(URI_RESOURCE_FILE)
+    run(host=APP_HOST, port=APP_PORT, debug=True)
+    # print(os.environ.get(ENV_KEY_DOMAIN_1), os.environ.get(ENV_KEY_USERNAME_1))

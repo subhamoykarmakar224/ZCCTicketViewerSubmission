@@ -1,6 +1,7 @@
 # My files
 user_data.txt
-resource.txt
+*.txt
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
