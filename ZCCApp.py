@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 import os
 from os.path import join, dirname
 
-
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
@@ -18,7 +17,9 @@ def base():
     if if_path_exists(URI_RESOURCE_FILE):
         os.remove(URI_RESOURCE_FILE)
     write_domain_to_file()
-    redirect('/1')
+    print('=============================')
+    print(redirect('/1'))
+    print('=============================')
 
 
 @route('/<pg>')
@@ -60,7 +61,8 @@ def show_home(pg='#'):
             return template('error', error_msg='404 error. Page you are looking for does not exits.')
 
         if next_pg_url == '' or prev_pg_url == '' or request_pg_num <= 0:
-            url = 'https://' + read_user_domain_name() + '.zendesk.com/api/v2/tickets.json?page[size]=' + str(APP_PER_PAGE_ITEM_COUNT)
+            url = 'https://' + read_user_domain_name() + '.zendesk.com/api/v2/tickets.json?page[size]=' + str(
+                APP_PER_PAGE_ITEM_COUNT)
             params['cur_page'] = 1
             params['btn-previous-disable'] = 'disabled'
         elif request_pg_num > cur_page:
@@ -166,7 +168,6 @@ def get_env_value(key):
     return os.environ.get(key, '')
 
 
-
 @error(404)
 def error404(error):
     return template('error', error_msg='404 error. Page you are looking for does not exits.')
@@ -177,8 +178,12 @@ def error404(error):
     return template('error', error_msg='500 error. Internal Server Error. Please try again later.')
 
 
+@error(503)
+def error404(error):
+    return template('error', error_msg='503 error. Service Unavailable Error. Please try again later.')
+
+
 if __name__ == '__main__':
     if os.path.exists(URI_RESOURCE_FILE):
         os.remove(URI_RESOURCE_FILE)
     run(host=APP_HOST, port=APP_PORT, debug=True)
-    # print(os.environ.get(ENV_KEY_DOMAIN_1), os.environ.get(ENV_KEY_USERNAME_1))
