@@ -7,7 +7,7 @@
 - APIs
 - References
 
-## Introduction {#id-intro}
+## Introduction
 This project is the
 
 ## Setup & Installation
