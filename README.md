@@ -1,4 +1,5 @@
 # Zendesk Intern Coding Challenge (2021) - Ticket Viewer
+
 ##Content
 - Introduction
 - Setup & Installation
