@@ -1,3 +1,0 @@
-prev:https://zccsubhamoy.zendesk.com/api/v2/tickets.json?page%5Bbefore%5D=eyJvIjoibmljZV9pZCIsInYiOiJhV1VBQUFBQUFBQUEifQ%3D%3D&page%5Bsize%5D=25
-next:https://zccsubhamoy.zendesk.com/api/v2/tickets.json?page%5Bafter%5D=eyJvIjoibmljZV9pZCIsInYiOiJhV1FBQUFBQUFBQUEifQ%3D%3D&page%5Bsize%5D=25
-page:5
