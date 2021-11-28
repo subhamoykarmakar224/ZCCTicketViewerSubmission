@@ -8,7 +8,10 @@
 - References
 
 ## Introduction
-This project is the
+This project is for Zendesk Intern Coding Challenge for 2021. The application has been written in python using the 
+bottle framework. The application will authenticate a user using OAuth and fetch tickets for that user.  
+
+![Dashboard](HomePage.PNG)
 
 ## Setup & Installation
 After cloning the project, please go through the following steps to get the project up and running.
