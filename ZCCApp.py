@@ -26,6 +26,7 @@ def base():
 def show_home(pg='#'):
     write_domain_to_file()
     request_pg_num = 0
+    print("PG:: ", pg)
     if pg != "#":
         request_pg_num = int(pg)
     params = {

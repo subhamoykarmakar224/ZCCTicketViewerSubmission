@@ -39,10 +39,6 @@ def write_domain_to_file():
         write_user_domain_name(domain_val)
 
 
-def delete_user_domain_name():
-    pass
-
-
 def read_user_domain_name():
     if not os.path.exists(URI_DOMAIN_DATA_FILE):
         return ''

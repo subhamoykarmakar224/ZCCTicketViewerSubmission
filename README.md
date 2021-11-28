@@ -74,7 +74,10 @@ The file `test_ZCApp.py` is one which has all the uni-test cases. To run the uni
 ```
 python3 test_ZCApp.py
 ```
-
+To Check for coverage:
+```
+pytest --cov=Helper
+```
 ## APIs
 The following are the apis used to make this project:
 - https://<domain_name>.zendesk.com/api/v2/tickets.json?page[size]=25
