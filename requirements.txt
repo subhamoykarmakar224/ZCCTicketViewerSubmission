@@ -1,0 +1,4 @@
+requests==2.26.0
+bottle==0.12.19
+python-dotenv==0.19.2
+boddle==0.2.9
